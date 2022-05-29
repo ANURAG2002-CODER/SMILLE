@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "SMILLE",
+  "description": "This smart autofill extension lets the user securely autheticate to any website using Facial Recognition",
+  "version": "1.0.0",
+  "browser_action": {
+    "default_icon": "img/icon.png",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/content.js"]
+    }
+  ],
+  "background": {
+    "page": "background.html",
+    "js": "js/background.js",
+    "persistent": false
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "webNavigation",
+    "unlimitedStorage",
+    "https://ajax.googleapis.com/"
+  ]
+}
