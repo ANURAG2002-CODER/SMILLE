@@ -1,0 +1,149 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<div class="hero">
+  <!-- <div class="loaderscreen"><div class="loader"></div></div> -->
+  <div class="homehead">
+    <div class="txt">
+      We bring to you the
+      <span class="sm">smartest </span>way to login
+      <!-- <img style="margin-left: -5%;margin-top: -5%;" src="{% static 'frontend/imgs/SparkleUp.png' %}"/> -->
+    </div>
+    <img class="lockimg" src="{% static 'frontend/imgs/lock_front.png' %}" />
+
+    <a href="http://127.0.0.1:8000/" class="px-2">
+      <button class="btn btn-primary addbtn">Add Extension To Chrome</button>
+    </a>
+    <div>
+      <div class="about wow fadeInUp" id="about" data-wow-delay="0.1s">
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-lg-5 col-md-6">
+              <div class="about-img">
+                <center>
+                  <img
+                    src="{% static 'frontend/imgs/icon.png' %}"
+                    alt="lock illustration"
+                  />
+                </center>
+              </div>
+            </div>
+            <div class="col-lg-7 col-md-6 ws">
+              <div class="section-header text-left">
+                <h2 class="hdwl">Welcome to SMILLE</h2>
+              </div>
+              <div class="about-text">
+                <p>
+                  SMILLE is a browser extension that recognises a user when he
+                  or she attempts to log into one of their accounts. Only the
+                  user who has registered his or her face will be able to access
+                  the accounts. Every time the user tries to access one of his
+                  or her accounts, the user's face will be recognised. Option to
+                  open the accounts via pin is also provided.
+                </p>
+                <p>
+                  As a result, there is no need to log out of your account every
+                  time to keep your data safe. With a single click you can
+                  access your accounts as well as keep the account password
+                  protected.
+                </p>
+                <a href="{% url 'loginuser' %}">
+                  <button class="btn btn-primary regbutton" class="lnk px-2">
+                    Register Now
+                  </button>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- About End -->
+
+      <div class="service" id="features">
+        <div class="container pt-3">
+          <div
+            class="section-header text-center wow zoomIn featbox"
+            data-wow-delay="0.1s"
+          >
+            <h2 class="hdwl">SMILLE For Ease</h2>
+          </div>
+          <div class="row">
+            <div
+              class="col-lg-4 col-md-6 wow fadeInUp fch"
+              data-wow-delay="0.0s"
+            >
+              <div class="service-item active">
+                <center>
+                  <img
+                    class="ftrimg"
+                    src="{% static 'frontend/imgs/patternloginicon.png' %}"
+                    alt="pattern login"
+                  />
+                  <h3 class="fthead">PIN Log-In</h3>
+                </center>
+                <p class="featpara">
+                  Logging-In with Pin can also be an easy option sometimes, so
+                  SMILLE provides you with an easy to access Pin Protection.
+                </p>
+              </div>
+            </div>
+            <div
+              class="col-lg-4 col-md-6 wow fadeInUp ftr fch"
+              data-wow-delay="0.2s"
+            >
+              <div class="service-item active">
+                <center>
+                  <img
+                    class="ftrimg2"
+                    src="{% static 'frontend/imgs/facialloginicon.png' %}"
+                    alt="facial login"
+                  />
+                  <h3 class="fthead">Facial Log-In</h3>
+                </center>
+                <p class="featpara">
+                  With the Face Detection Method, SMILLE ensures the security of
+                  your accounts. By recognising your face it will log you into
+                  your account.
+                </p>
+              </div>
+            </div>
+            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.4s">
+              <div class="service-item active">
+                <center>
+                  <img
+                    class="ftrimg2"
+                    src="{% static 'frontend/imgs/autofillicon.png' %}"
+                    alt="autofill icon"
+                  />
+                  <h3 class="fthead">Auto-Fill</h3>
+                </center>
+                <p class="featpara">
+                  SMILLE has a feature that allows you to autofill your
+                  credentials just by recognising your face. You won't have to
+                  retype your passwords; instead, you'll be able to log in with
+                  a single click.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section-header text-center wow zoomIn" data-wow-delay="0.1s">
+        <h2 class="hdwl">Instructions To Use</h2>
+      </div>
+      <img
+        class="stepimg wow zoomIn"
+        data-wow-delay="0.1s"
+        }
+        src="{% static 'frontend/imgs/illustration.png' %}"
+      />
+    </div>
+  </div>
+</div>
+<script>
+  var loader = document.querySelector(".loaderscreen");
+  window.addEventListener("load", hide);
+  function hide() {
+    loader.style.display = "none";
+  }
+</script>
+{% endblock %}

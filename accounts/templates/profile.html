@@ -1,0 +1,102 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="{% static 'frontend/css/profile.css' %}" />
+
+<div class="hero">
+  <h1 class="dsh">Dashboard</h1>
+  
+  <ul class="responsive-table">
+    <div>
+      
+    <input
+      class="form-control mb-2 srch"
+      id="myInput"
+      type="text"
+      placeholder="Search.."
+    />
+    </div>
+    <div class="tbhead"  >
+    <li class="table-header" style="text-align: center; color: #eee;">
+      <div class="col col-4">Website URL</div>
+      <div class="col col-3">Email Id/ Username</div>
+      <div class="col col-3">Password</div>
+      <div class="col col-2">View/Delete</div>
+
+    </li>
+
+    <div class="tabledata">
+    {% for data in datas %}
+    <li
+      class="table-row"
+    >
+      <div class="col-4" data-label="Website URL">{{data.url}}</div>
+      <div class="col-3" data-label="Email ID">{{ data.username }}</div>
+      
+      <div class="col-3" >
+        <span class="col-sm-10" id="{{data.url}}">******</span>
+      </div>
+      <div class="col-2" >
+      <button
+      class="eye"  
+      id="eyebt{{data.url}}"       
+      onclick="showPassword('{{data.username}}', '{{data.url}}','{{data.password}}')"
+    >
+      <i class="fa">&#xf06e;</i>
+    </button>
+      <!-- to delete this entry -->
+      <button
+                class="eye"
+                href="#"
+                onclick="$('#delete_entry').click()"
+                
+                ><i class="fa fa-remove"></i></button
+              >
+              <form
+                style="display: none"
+                method="DELETE"
+                action="{% url 'delete_user_data' data.id %}"
+              >
+                {% csrf_token %}
+                <button id="delete_entry" type="submit">
+                  <strong>delete</strong>
+                </button>
+              </form>
+    
+  </div>
+  
+      
+    </li>
+    {% endfor %}
+  </div>
+    <script>
+      var rw=document.getElementsByClassName("table-row");
+      if (rw.length===0){
+        document.getElementsByClassName("tabledata")[0].innerHTML='<p class="nodata">You have not saved any passwords yet!</p>';
+      }
+      function showPassword(username, url, password) {
+        console.log(username, url);
+        var span=document.getElementById("eyebt"+url)
+        if(document.getElementById(url).innerHTML==="******"){
+          document.getElementById(url).innerHTML=password;
+          span.innerHTML = `<i style="color: #eee" id="eyebt${url}" class="fa">&#xf070;</i></span>`;
+        }
+        else{
+          document.getElementById(url).innerHTML="******";
+          span.innerHTML = `<i style="color: #eee" id="eyebt${url}" class="fa">&#xf06e;</i></span>`;
+        }
+      }
+    </script>
+  </ul>
+</div>
+</div>
+<script>
+  $(document).ready(function () {
+    $("#myInput").on("keyup", function () {
+      var value = $(this).val().toLowerCase();
+      $(".table-row").filter(function () {
+        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+      });
+    });
+  });
+</script>
+{% endblock %}

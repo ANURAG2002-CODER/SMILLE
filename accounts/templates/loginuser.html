@@ -1,0 +1,102 @@
+<!-- {% load static %} -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMILLE | Login</title>
+  <link rel="stylesheet" href="{% static 'frontend/css/authenticate.css' %}" />
+</head>
+
+<body>
+  <div class="page">
+    <header>
+      <div class="container" id="container">
+        <div class="form-container sign-in-container">
+          <form class="modal-content" method="POST" id="form">
+            {% csrf_token %}
+            <h1>Log In</h1>
+            <br>
+            {% if error %}
+            <div style="color: red;" role="alert" id="error">
+              {{ error }}
+            </div>
+            <script>
+              setTimeout(function(){ document.getElementById("error").style.display="None";}, 3000);
+            </script>
+            {% endif %}
+            <label for="user"><b></b></label>
+            <input type="text" placeholder="Enter Email" name="email" required>
+            <label for="password"><b></b></label>
+            <input type="password" placeholder="Enter Password" name="password" id="password" required>
+            <button type="submit" id="login" class="sig">Log In</button>
+            <a href="{% url 'reset_password' %}" class="dropdown-item forget" >Forgot Password?</a>
+          </form>
+        </div>
+        <div class="form-container sign-up-container">
+          
+          <form class="modal-content" method="POST" id="form2">
+            <h1>Sign Up</h1>
+            <br>
+            {% csrf_token %}
+            
+            {% if error %}
+            <div style="color: red;" role="alert" id="error">
+              {{ error }}
+            </div>
+            <script>
+              setTimeout(function(){ document.getElementById("error").style.display="None";}, 3000);
+            </script>
+            {% endif %}
+
+            <label for="email"><b></b></label>
+            <input type="email" placeholder="Enter Email" name="email" required>
+
+            <label for="password1"><b></b></label>
+            <input type="password" placeholder="Enter Password" name="password1" id="password1" required>
+
+            <label for="password2"><b></b></label>
+            <input type="password" placeholder="Confirm Password" name="password2" id="password2" required>
+            <button type="button" onclick="submitForm()" class="sig">Sign Up</button>
+            <p style="color:#0095ff">*Password should have atleast 8 characters including atleast 1 digit</p>
+          </form>
+        </div>
+        
+        <div class="overlay-container">
+          <div class="overlay">
+            <div class="overlay-panel overlay-left">
+              <h1>Hello, Friend!</h1>
+              <p>Please Sign Up With Your Personal Info!</p>
+              <button  id="signIn" class="ghost-1">Log In</button>
+            </div>
+            <div class="overlay-panel overlay-right">
+              <h1>Welcome Back!</h1>
+              <p>
+                Personalise Your Account!
+              </p>
+              <button class="ghost-1" id="signUp">Sign Up</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- <h6 class="text-center">Made with ❤️ by STC-VIT</h6> -->
+  </div>
+  <script src="{% static 'frontend/js/authenticate.js' %}"></script>
+  <script>
+function submitForm(){
+  document.getElementById("form2").submit(function(e) {
+    e.preventDefault();
+    console.log("preventing.....")
+  });
+}
+    </script>
+  
+</body>
+
+</html>
+
+</html>

@@ -1,0 +1,660 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<style>
+  body {
+    background-image: url("{% static 'frontend/imgs/key.png' %}");
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position-x: right;
+  }
+</style>
+
+<link rel="stylesheet" href="{% static 'frontend/css/cam.css' %}" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<div class="loaderscreen"><div class="loader"></div></div>
+<div class="hero regfacemain">
+  <h1 class="regface">Register face</h1>
+  <div class="bttn">
+    {{error}}
+
+    <div class="instr" style="padding-top: 3%">
+      <h2 style="color: #149bfc">Instructions:</h2>
+      <p style="color: #eee">
+        1. Sit in a Well-Lit Area<br />
+        2. Face Towards the Camera<br />
+        3. Click on Start Recording<br />
+        4. Wait for The Timer to Complete<br />
+        5. Proceed to Check Face
+      </p>
+    </div>
+    <center>
+      <div id="container">
+        <video autoplay="true" id="video"></video>
+      </div>
+    </center>
+    <div id="app"></div>
+  </div>
+  <center>
+    <form id="myForm" method="POST" enctype="multipart/form-data" class="mb-5">
+      {% csrf_token %}
+      <div>
+        <button class="btn btn-primary" id="record" type="button">
+          Start Recording
+        </button>
+      </div>
+    </form>
+    <div
+      class="spinner-border text-primary"
+      id="loading1"
+      style="display: none"
+    ></div>
+  </center>
+  <div id="showSaveSuccessResult" class="alert alert-success" role="alert">
+    <svg
+      width="26"
+      height="24"
+      viewBox="0 0 26 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <ellipse cx="12.6542" cy="12" rx="12.6009" ry="12" fill="#149BFC" />
+      <rect
+        width="3.06113"
+        height="15.3695"
+        rx="1"
+        transform="matrix(0.651691 0.758484 -0.788806 0.614642 19.9697 6)"
+        fill="white"
+      />
+      <rect
+        width="3.08898"
+        height="6.65707"
+        rx="1"
+        transform="matrix(0.780936 -0.624612 0.661447 0.749992 5.30371 12.9297)"
+        fill="white"
+      />
+    </svg>
+    <span id="tick1" class="pl-2">Face Registered</span>
+  </div>
+  <div class="alert alert-danger" id="showSaveFailResult" role="alert">
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <circle cx="12" cy="12" r="12" fill="#FF4040" />
+      <rect x="10.5" y="3" width="3" height="13.5" rx="1" fill="white" />
+      <rect x="10.5" y="18" width="3" height="3" rx="1.5" fill="white" />
+    </svg>
+    <span id="cross1">Face not registered. Please try again</span>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="{% static 'frontend/js/clock.js' %}"></script>
+<script>
+var loader=document.querySelector(".loaderscreen")
+  window.addEventListener("load",hide)
+  function hide() {
+    loader.style.display="none"
+  }
+  // (function () {
+  const FULL_DASH_ARRAY = 283;
+  const WARNING_THRESHOLD = 4;
+  const ALERT_THRESHOLD = 2;
+  let stopRec;
+
+  const record = document.getElementById("record");
+  const stop = document.getElementById("stop");
+  const form = document.getElementById("myForm");
+
+  if (!navigator.mediaDevices) {
+    alert("getUserMedia support required to use this page");
+  }
+
+  let chunks = [];
+  let onDataAvailable = (e) => {
+    chunks[0] = e.data;
+  };
+
+  // Not showing vendor prefixes.
+  navigator.mediaDevices
+    .getUserMedia({
+      audio: false,
+      video: true,
+    })
+    .then((mediaStream) => {
+      let recorder = new MediaRecorder(mediaStream);
+      recorder.ondataavailable = onDataAvailable;
+      let video = document.querySelector("video");
+      video.srcObject = mediaStream;
+      record.onclick = () => {
+        recorder.start();
+        console.log(recorder.state);
+        startTimer();
+        console.log("recorder started");
+      };
+
+      stopRec = () => {
+        recorder.stop();
+        console.log(recorder.state);
+        console.log("recorder stopped");
+      };
+
+      video.onloadedmetadata = (e) => {
+        console.log("onloadedmetadata", e);
+      };
+
+      recorder.onstop = (e) => {
+        console.log("e", e);
+        console.log("chunks", chunks);
+        let bigVideoBlob = new Blob(chunks, {
+          type: "video/mp4",
+          codecs: "avc1.42001E, mp4a.40.2",
+        });
+        var file = new File([bigVideoBlob], "{{ user.id|safe }}.mp4", {
+          type: "video/mp4",
+          codecs: "avc1.42001E, mp4a.40.2",
+          lastModified: Date.now(),
+        });
+
+        let fd = new FormData(form);
+        fd.append("data", file);
+        document.getElementById("loading1").style.display = "block";
+        fetch("/facedata/", {
+          method: "POST",
+          body: fd,
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            document.getElementById("loading1").style.display = "none";
+            console.log(res);
+            let save = document.getElementById("showSaveSuccessResult");
+            let not_save = document.getElementById("showSaveFailResult");
+            if (res.Success == true) {
+              save.style.display = "block";
+              setTimeout(function () {
+                save.style.display = "none";
+              }, 3000);
+              document.getElementById("tick1").innerHTML = res.Message;
+              not_save.style.display = "none";
+            } else {
+              not_save.style.display = "block";
+              setTimeout(function () {
+                not_save.style.display = "none";
+              }, 3000);
+              document.getElementById("cross1").innerHTML = res.Message;
+              save.style.display = "none";
+            }
+            console.log("fetching done");
+          });
+      };
+    })
+    .catch(function (err) {
+      console.log("error", err);
+    });
+
+  const COLOR_CODES = {
+    info: {
+      color: "green",
+    },
+    warning: {
+      color: "orange",
+      threshold: WARNING_THRESHOLD,
+    },
+    alert: {
+      color: "red",
+      threshold: ALERT_THRESHOLD,
+    },
+  };
+
+  let TIME_LIMIT = 3;
+  let timePassed = 0;
+  let timeLeft = TIME_LIMIT;
+  let timerInterval = null;
+  let remainingPathColor = COLOR_CODES.info.color;
+
+  document.getElementById("app").innerHTML = `
+  <div class="base-timer">
+    <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g class="base-timer__circle">
+        <circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle>
+        <path
+          id="base-timer-path-remaining"
+          stroke-dasharray="283"
+          class="base-timer__path-remaining ${remainingPathColor}"
+          d="
+            M 50, 50
+            m -45, 0
+            a 45,45 0 1,0 90,0
+            a 45,45 0 1,0 -90,0
+          "
+        ></path>
+      </g>
+    </svg>
+    <span id="base-timer-label" class="base-timer__label">${formatTime(
+      timeLeft
+    )}</span>
+  </div>
+  `;
+
+  function onTimesUp() {
+    stopRec();
+    clearInterval(timerInterval);
+    TIME_LIMIT = 3;
+    timePassed = 0;
+    timeLeft = TIME_LIMIT;
+    timerInterval = null;
+    remainingPathColor = COLOR_CODES.info.color;
+    document.getElementById("app").innerHTML = `
+  <div class="base-timer">
+    <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g class="base-timer__circle">
+        <circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle>
+        <path
+          id="base-timer-path-remaining"
+          stroke-dasharray="283"
+          class="base-timer__path-remaining ${remainingPathColor}"
+          d="
+            M 50, 50
+            m -45, 0
+            a 45,45 0 1,0 90,0
+            a 45,45 0 1,0 -90,0
+          "
+        ></path>
+      </g>
+    </svg>
+    <span id="base-timer-label" class="base-timer__label">${formatTime(
+      timeLeft
+    )}</span>
+  </div>
+  `;
+  }
+
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      timePassed = timePassed += 1;
+      timeLeft = TIME_LIMIT - timePassed;
+      document.getElementById("base-timer-label").innerHTML =
+        formatTime(timeLeft);
+      setCircleDasharray();
+      setRemainingPathColor(timeLeft);
+
+      if (timeLeft === 0) {
+        onTimesUp();
+      }
+    }, 1000);
+  }
+
+  function formatTime(time) {
+    const minutes = Math.floor(time / 60);
+    let seconds = time % 60;
+
+    if (seconds < 10) {
+      seconds = `0${seconds}`;
+    }
+
+    return `${minutes}:${seconds}`;
+  }
+
+  function setRemainingPathColor(timeLeft) {
+    const { alert, warning, info } = COLOR_CODES;
+    if (timeLeft <= alert.threshold) {
+      document
+        .getElementById("base-timer-path-remaining")
+        .classList.remove(warning.color);
+      document
+        .getElementById("base-timer-path-remaining")
+        .classList.add(alert.color);
+    } else if (timeLeft <= warning.threshold) {
+      document
+        .getElementById("base-timer-path-remaining")
+        .classList.remove(info.color);
+      document
+        .getElementById("base-timer-path-remaining")
+        .classList.add(warning.color);
+    }
+  }
+
+  function calculateTimeFraction() {
+    const rawTimeFraction = timeLeft / TIME_LIMIT;
+    return rawTimeFraction - (1 / TIME_LIMIT) * (1 - rawTimeFraction);
+  }
+
+  function setCircleDasharray() {
+    const circleDasharray = `${(
+      calculateTimeFraction() * FULL_DASH_ARRAY
+    ).toFixed(0)} 283`;
+    document
+      .getElementById("base-timer-path-remaining")
+      .setAttribute("stroke-dasharray", circleDasharray);
+  }
+  // });
+</script>
+
+<link rel="stylesheet" href="{% static 'frontend/css/checkfacedata.css' %}" />
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<div id="checkface">
+  <div class="play-area">
+    <h1 class="checkfacehead">Check face</h1>
+    <p class="checkpara">
+      You may now check the registeration of your face to ensure that your
+      biometrics have been correctly recorded, minimizing the amount of errors
+      you may face in the future due to poor lighting.
+    </p>
+
+    <div class="row justify-content-center">
+      <div class="col-md play-area-sub">
+        <h3>The Stream</h3>
+        <div id="container">
+          <video id="video2" width="500"></video>
+        </div>
+        <form
+          id="myForm"
+          method="POST"
+          enctype="multipart/form-data"
+          class="mb-5 text-center"
+          action="checkfacedata/"
+        >
+          {% csrf_token %}
+          <div>
+            <button
+              class="btn btn-primary capture"
+              type="button mx-auto"
+              id="startbutton"
+            >
+              Capture
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="col-md offset-2 play-area-sub">
+        <h3>The Capture</h3>
+        <div id="container">
+          <canvas id="canvas"></canvas>
+          <form method="POST" id="myForm">{% csrf_token %}</form>
+        </div>
+      </div>
+    </div>
+    <center>
+      <div
+        class="spinner-border text-primary"
+        id="loading2"
+        style="display: none"
+      ></div>
+    </center>
+    <div class="alert alert-success" id="showSuccessResult" role="alert">
+      <svg
+        width="26"
+        height="24"
+        viewBox="0 0 26 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <ellipse cx="12.6542" cy="12" rx="12.6009" ry="12" fill="#149BFC" />
+        <rect
+          width="3.06113"
+          height="15.3695"
+          rx="1"
+          transform="matrix(0.651691 0.758484 -0.788806 0.614642 19.9697 6)"
+          fill="white"
+        />
+        <rect
+          width="3.08898"
+          height="6.65707"
+          rx="1"
+          transform="matrix(0.780936 -0.624612 0.661447 0.749992 5.30371 12.9297)"
+          fill="white"
+        />
+      </svg>
+      <span id="tick2"
+        >You're good to go! Go ahead and set your pin.</span
+      >
+    </div>
+    <div class="alert alert-danger" id="showFailResult" role="alert">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="12" fill="#FF4040" />
+        <rect x="10.5" y="3" width="3" height="13.5" rx="1" fill="white" />
+        <rect x="10.5" y="18" width="3" height="3" rx="1.5" fill="white" />
+      </svg>
+      <span id="cross2">Face not found. Please try again.</span>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    const status = (response) => {
+      if (response.status >= 200 && response.status < 300) {
+        return Promise.resolve(response);
+      }
+      return Promise.reject(new Error(response.statusText));
+    };
+
+    const json = (response) => response.json();
+
+    var width = 405; // We will scale the photo width to this
+    var height = 0; // This will be computed based on the input stream
+
+    var streaming = false;
+
+    var video = null;
+    var canvas = null;
+    var startbutton = null;
+    var data;
+
+    function startup() {
+      video = document.getElementById("video2");
+      canvas = document.getElementById("canvas");
+      startbutton = document.getElementById("startbutton");
+
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: false })
+        .then(function (stream) {
+          video.srcObject = stream;
+          video.play();
+        })
+        .catch(function (err) {
+          console.log("An error occurred: " + err);
+        });
+
+      video.addEventListener(
+        "canplay",
+        function (ev) {
+          if (!streaming) {
+            height = video.videoHeight / (video.videoWidth / width);
+
+            if (isNaN(height)) {
+              height = width / (4 / 3);
+            }
+            video.setAttribute("width", width);
+            video.setAttribute("height", height);
+            canvas.setAttribute("width", width);
+            canvas.setAttribute("height", height);
+            streaming = true;
+          }
+        },
+        false
+      );
+
+      startbutton.addEventListener(
+        "click",
+        function (e) {
+          takepicture();
+          e.preventDefault();
+        },
+        false
+      );
+    }
+
+    function takepicture() {
+      var context = canvas.getContext("2d");
+      if (width && height) {
+        canvas.width = width;
+        canvas.height = height;
+        context.drawImage(video, 0, 0, width, height);
+        var data = canvas.toDataURL("image/png");
+      } else {
+        console.log("No photo detected");
+      }
+      fdata = new FormData(document.getElementById("myForm"));
+      var dataURI = data;
+      var imageData = dataURItoBlob(dataURI);
+      fdata.append("image", imageData, "{{ user.id|safe }}.png");
+      document.getElementById("loading2").style.display = "block";
+      fetch("/checkfacedata/", {
+        method: "POST",
+        body: fdata,
+      })
+        .then(status) // note that the `status` function is actually **called** here, and that it **returns a promise***
+        .then(json) // likewise, the only difference here is that the `json` function here returns a promise that resolves with `data`
+        .then((data) => {
+          document.getElementById("loading2").style.display = "none";
+          console.log(data);
+          let save = document.getElementById("showSuccessResult");
+          let fail = document.getElementById("showFailResult");
+          // ... which is why `data` shows up here as the first parameter to the anonymous function
+          if (data.Success == true) {
+            save.style.display = "block";
+            setTimeout(function () {
+              save.style.display = "none";
+            }, 3000);
+            document.getElementById("tick2").innerHTML = data.Message;
+            fail.style.display = "none";
+          } else {
+            fail.style.display = "block";
+            setTimeout(function () {
+              fail.style.display = "none";
+            }, 3000);
+            document.getElementById("cross2").innerHTML = data.Message;
+            save.style.display = "none";
+          }
+        })
+        .catch((error) => {
+          console.log("Request failed", error);
+        });
+    }
+    function dataURItoBlob(dataURI) {
+      var byteString = atob(dataURI.split(",")[1]);
+      var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
+      var buffer = new ArrayBuffer(byteString.length);
+      var data = new DataView(buffer);
+      for (var i = 0; i < byteString.length; i++) {
+        data.setUint8(i, byteString.charCodeAt(i));
+      }
+      return new Blob([buffer], { type: mimeString });
+    }
+
+    window.addEventListener("load", startup, false);
+  })();
+</script>
+
+<link href="{% static 'frontend/css/pass.css' %}" rel="stylesheet" />
+<div id="setpinmain" style="padding-top: 40px">
+  <h1 id="setpin" class="setpinh1">Set Pin</h1>
+  <p class="setpinp">
+    Logging-In with Pin is also another easy and quick option that SMILLE
+    provides you with. Enter a Pin for easy access to websites using Pin
+    Protection.
+  </p>
+  <div class="login">
+    <h5 class="storepinh5">Store your PIN</h5>
+    <form autocomplete="off" id="PINform">
+      {% csrf_token %}
+
+      <input
+        type="password"
+        name="userInput"
+        placeholder="Enter 4 digit PIN"
+        id="userInput"
+        maxlength="4"
+        required="required"
+        class="setpininput"
+      /><button type="button" onclick="showPassword()" id="showpass">
+        <span id="eyespan">
+          <i style="color: #eee" id="eyeb" class="fa">&#xf06e;</i>
+        </span>
+      </button>
+
+      <p>
+        <input
+          type="password"
+          name="userInput2"
+          value=""
+          placeholder="Confirm PIN"
+          id="userInput2"
+          maxlength="4"
+          class="setpininput"
+        />
+      </p>
+      <span id="Message"></span>
+      <button
+        type="button"
+        onclick="pincode()"
+        class="btn btn-primary submitpin"
+      >
+        Submit
+      </button>
+    </form>
+
+     <div
+      class="alert alert-danger setpinalerts"
+      id="showPINFailResult"
+      role="alert"
+    >
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="12" cy="12" r="12" fill="#FF4040" />
+        <rect x="10.5" y="3" width="3" height="13.5" rx="1" fill="white" />
+        <rect x="10.5" y="18" width="3" height="3" rx="1.5" fill="white" />
+      </svg>
+      <span id="cross3">Pins not matching!</span>
+    </div> 
+    <div
+      id="showPINSuccessResult"
+      class="alert alert-success setpinalerts"
+      role="alert"
+    >
+      <svg
+        width="26"
+        height="24"
+        viewBox="0 0 26 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <ellipse cx="12.6542" cy="12" rx="12.6009" ry="12" fill="#149BFC" />
+        <rect
+          width="3.06113"
+          height="15.3695"
+          rx="1"
+          transform="matrix(0.651691 0.758484 -0.788806 0.614642 19.9697 6)"
+          fill="white"
+        />
+        <rect
+          width="3.08898"
+          height="6.65707"
+          rx="1"
+          transform="matrix(0.780936 -0.624612 0.661447 0.749992 5.30371 12.9297)"
+          fill="white"
+        />
+      </svg>
+      <span id="tick3">Pin set successfully</span>
+    </div>
+  </div>
+  
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<script src="{% static 'frontend/js/pin-login.js' %}"></script>
+{% endblock %}
